@@ -1,20 +1,21 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { usePrivy } from "@privy-io/react-auth";
-import { SignIn, SignOut, CopySimple, CaretDown } from "phosphor-react";
+import { useAccount, useDisconnect } from "wagmi";
+import { useConnectModal } from '@rainbow-me/rainbowkit';
+import { CopySimple, SignOut, CaretDown } from "phosphor-react";
 
 export default function Navbar() {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const { ready, authenticated, user, login, logout } = usePrivy();
+  const { address, isConnected } = useAccount();
+  const { disconnect } = useDisconnect();
+  const { openConnectModal } = useConnectModal();
   const [copied, setCopied] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const userAddress = user?.linkedAccounts?.find(account => account.type === 'wallet')?.address || "";
-
   const handleCopy = () => {
-    if (userAddress) {
-      navigator.clipboard.writeText(userAddress);
+    if (address) {
+      navigator.clipboard.writeText(address);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     }
@@ -42,23 +43,23 @@ export default function Navbar() {
           </div>
           
           <div className="flex items-center gap-6">
-            {ready && !authenticated && (
+            {!isConnected && (
               <button
-                onClick={login}
+                onClick={openConnectModal}
                 className="relative inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-xs font-bold cursor-pointer disabled:pointer-events-none disabled:opacity-60 shrink-0 outline-none focus-visible:ring-2 focus-visible:ring-offset-1 active:translate-y-[1px] select-none bg-transparent text-black hover:bg-gray-100 h-9 px-4 py-2 border border-gray-300"
               >
                 connect wallet
               </button>
             )}
             
-            {ready && authenticated && userAddress && (
+            {isConnected && address && (
               <div className="relative" ref={dropdownRef}>
                 <button
                   onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                   className="relative inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium cursor-pointer disabled:pointer-events-none disabled:opacity-60 shrink-0 outline-none focus-visible:ring-2 focus-visible:ring-offset-1 active:translate-y-[1px] select-none bg-transparent text-black hover:bg-gray-100 h-9 px-4 py-2 border border-gray-300"
                 >
                   <code className="text-xs font-mono">
-                    {userAddress.slice(0, 6)}...{userAddress.slice(-4)}
+                    {address.slice(0, 6)}...{address.slice(-4)}
                   </code>
                   <CaretDown size={16} weight="bold" />
                 </button>
@@ -79,7 +80,7 @@ export default function Navbar() {
                       
                       <button
                         onClick={() => {
-                          logout();
+                          disconnect();
                           setIsDropdownOpen(false);
                         }}
                         className="w-full flex items-center gap-2 px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-md transition-colors cursor-pointer"

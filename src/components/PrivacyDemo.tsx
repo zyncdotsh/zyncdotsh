@@ -5,13 +5,13 @@ import { logTestTransaction } from "@/lib/firebase";
 import { collection, query, orderBy, limit, onSnapshot } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import Link from "next/link";
-import { usePrivy } from "@privy-io/react-auth";
+import { useAccount } from "wagmi";
 import { CopySimple, LockSimple } from "phosphor-react";
 
 const generateFakeAddress = () => {
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz123456789';
-  let result = '';
-  for (let i = 0; i < 44; i++) {
+  const chars = '0123456789abcdef';
+  let result = '0x';
+  for (let i = 0; i < 40; i++) {
     result += chars.charAt(Math.floor(Math.random() * chars.length));
   }
   return result;
@@ -72,15 +72,13 @@ const CopyButton = ({ text }: { text: string }) => {
 };
 
 export default function PrivacyDemo() {
-  const { authenticated, user } = usePrivy();
+  const { address: userAddress, isConnected } = useAccount();
   const [recipient, setRecipient] = useState("");
   const [amount, setAmount] = useState("1.0");
   const [isPrivate, setIsPrivate] = useState(true);
   const [secret, setSecret] = useState("");
   const [status, setStatus] = useState("");
   const [recentTransactions, setRecentTransactions] = useState<Transaction[]>([]);
-
-  const userAddress = user?.linkedAccounts?.find(account => account.type === 'wallet')?.address || "";
 
   useEffect(() => {
     const q = query(
@@ -101,7 +99,7 @@ export default function PrivacyDemo() {
   }, []);
 
   const handleSendTransaction = async () => {
-    if (!authenticated) {
+    if (!isConnected) {
       setStatus("Please connect your wallet first");
       return;
     }
@@ -121,7 +119,7 @@ export default function PrivacyDemo() {
     const signature = generateFakeSignature();
     
     const txData: any = {
-      sender: userAddress,
+      sender: userAddress || "",
       recipient: recipient,
       amount: parseFloat(amount),
       signature: signature,
@@ -164,7 +162,7 @@ export default function PrivacyDemo() {
           <h2 className="text-lg font-bold text-black mb-4">send transaction</h2>
           
           <div className="space-y-3">
-            {authenticated && userAddress && (
+            {isConnected && userAddress && (
               <div>
                 <label className="block text-xs font-bold text-black mb-1">
                   your address
@@ -187,12 +185,12 @@ export default function PrivacyDemo() {
                 value={recipient}
                 onChange={(e) => setRecipient(e.target.value)}
                 placeholder="address..."
-                disabled={!authenticated}
+                disabled={!isConnected}
                 className="w-full px-2 py-1.5 border border-gray-300 text-black font-mono text-[10px] focus:outline-none focus:border-gray-400 disabled:bg-gray-100 disabled:cursor-not-allowed"
               />
               <button
                 onClick={generateRandomRecipient}
-                disabled={!authenticated}
+                disabled={!isConnected}
                 className="mt-1 w-full px-2 py-1.5 bg-gray-100 border border-gray-300 text-black text-xs font-bold hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 generate random
@@ -201,7 +199,7 @@ export default function PrivacyDemo() {
 
             <div>
               <label className="block text-xs font-bold text-black mb-1">
-                amount (SOL)
+                amount (BNB)
               </label>
               <input
                 type="number"
@@ -210,7 +208,7 @@ export default function PrivacyDemo() {
                 max="100"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
-                disabled={!authenticated}
+                disabled={!isConnected}
                 className="w-full px-2 py-1.5 border border-gray-300 text-black text-base focus:outline-none focus:border-gray-400 disabled:bg-gray-100 disabled:cursor-not-allowed"
               />
             </div>
@@ -222,10 +220,10 @@ export default function PrivacyDemo() {
                   id="private"
                   checked={isPrivate}
                   onChange={(e) => setIsPrivate(e.target.checked)}
-                  disabled={!authenticated}
+                  disabled={!isConnected}
                   className="w-3 h-3 disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed"
                 />
-                <label htmlFor="private" className={`text-xs font-bold text-black ${!authenticated ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'} flex items-center gap-1`}>
+                <label htmlFor="private" className={`text-xs font-bold text-black ${!isConnected ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'} flex items-center gap-1`}>
                   <LockSimple size={14} weight="bold" className="text-orange-600" />
                   private transaction
                 </label>
@@ -243,7 +241,7 @@ export default function PrivacyDemo() {
                   onChange={(e) => setSecret(e.target.value)}
                   placeholder="enter secret..."
                   maxLength={64}
-                  disabled={!authenticated}
+                  disabled={!isConnected}
                   className="w-full px-2 py-1.5 border border-gray-300 text-black text-xs focus:outline-none focus:border-gray-400 disabled:bg-gray-100 disabled:cursor-not-allowed"
                 />
               </div>
@@ -251,10 +249,10 @@ export default function PrivacyDemo() {
 
             <button
               onClick={handleSendTransaction}
-              disabled={!authenticated || (isPrivate && !secret)}
+              disabled={!isConnected || (isPrivate && !secret)}
               className="w-full px-3 py-2 bg-black text-white font-bold text-sm hover:bg-gray-800 disabled:bg-gray-400 disabled:cursor-not-allowed"
             >
-              {authenticated ? 'send →' : 'connect wallet to send'}
+              {isConnected ? 'send →' : 'connect wallet to send'}
             </button>
 
             {status && (
@@ -304,7 +302,7 @@ export default function PrivacyDemo() {
                       )}
                     </div>
                     <span className="text-sm font-bold text-black">
-                      {tx.amount} SOL
+                      {tx.amount} BNB
                     </span>
                   </div>
                   

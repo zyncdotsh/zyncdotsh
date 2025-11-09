@@ -160,7 +160,7 @@ export default function ExplorerPage() {
                       <div className="flex items-center gap-1.5">
                         {tx.isPrivate && <LockSimple size={12} weight="bold" className="text-orange-600" />}
                         <span className="text-xs font-bold text-black">
-                          {tx.amount} SOL
+                          {tx.amount} BNB
                         </span>
                       </div>
                       <span className={`text-[9px] font-bold ${
@@ -213,7 +213,7 @@ export default function ExplorerPage() {
                 <div className="grid grid-cols-2 gap-2">
                   <div>
                     <p className="text-[10px] font-bold text-black mb-0.5">amount</p>
-                    <p className="text-lg font-bold text-black">{selectedTx.amount} SOL</p>
+                    <p className="text-lg font-bold text-black">{selectedTx.amount} BNB</p>
                   </div>
                   <div>
                     <p className="text-[10px] font-bold text-black mb-0.5">status</p>
