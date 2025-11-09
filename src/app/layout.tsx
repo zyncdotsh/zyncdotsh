@@ -7,11 +7,17 @@ export const metadata: Metadata = {
   description: "Privacy-first ecosystem for the paranoid",
   icons: {
     icon: "/logo.png",
+    shortcut: "/logo.png",
+    apple: "/logo.png",
   },
   openGraph: {
     title: "Zync",
     description: "Privacy-first ecosystem for the paranoid",
-    images: ["/logo.png"],
+    images: [
+      {
+        url: "/logo.png",
+      },
+    ],
   },
 };
 
