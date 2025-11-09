@@ -9,8 +9,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
       appId="cmfnl9d7t000nl80b7q7tatil"
       config={{
         appearance: {
-          walletChainType: 'solana-only',
-          walletList: ['phantom']
+          walletList: ['metamask', 'coinbase_wallet', 'wallet_connect', 'phantom'],
         },
         externalWallets: {
           solana: {
@@ -18,7 +17,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
               shouldAutoConnect: true,
             }),
           },
-        },
+        }
       }}
     >
       {children}
