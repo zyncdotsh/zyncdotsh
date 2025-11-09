@@ -2,13 +2,13 @@ import { initializeApp } from "firebase/app";
 import { getFirestore, collection, addDoc, Timestamp } from "firebase/firestore";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyBVUyHYMlqQpv6tUNkdwhj2eNh2tL9QQ3E",
-  authDomain: "mp3project-fef5a.firebaseapp.com",
-  projectId: "mp3project-fef5a",
-  storageBucket: "mp3project-fef5a.firebasestorage.app",
-  messagingSenderId: "982253535126",
-  appId: "1:982253535126:web:f292bcc43ac775afd8a7b7",
-  measurementId: "G-3LW6T0J5LY"
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+  measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
 };
 
 // Initialize Firebase
