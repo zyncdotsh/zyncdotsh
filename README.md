@@ -1,36 +1,200 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Privacy Protocol - Phase 1
 
-## Getting Started
+A privacy-first shielded pool protocol for NFTs using zero-knowledge proofs. Inspired by Tornado Cash and Zcash, built with a unique twist for the modern crypto ecosystem.
 
-First, run the development server:
+## 🎯 Vision
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+"we take the red pill then the blue pill" - A privacy protocol that lets you deposit NFTs into a shielded pool and withdraw them anonymously. No one knows which NFT you own or when you moved it.
+
+## 🏗️ Architecture Overview
+
+### Phase 1: Shielded Pool (Current)
+
+This initial phase implements a functional shielded pool on EVM chains (Base/BNB/Ethereum) with:
+
+1. **zk-SNARK Circuits** - Zero-knowledge proofs for private transactions
+2. **Smart Contract Vault** - Secure on-chain storage with merkle tree
+3. **Web Interface** - User-friendly demo for testing the flow
+4. **Explorer** - View commitments and nullifiers (not balances)
+
+### Core Components
+
+```
+circuits/
+├── deposit.circom    - Proves you know secret+nullifier → commitment
+└── withdraw.circom   - Proves you know secret for a merkle tree leaf
+
+contracts/
+└── Vault.sol         - Shielded pool contract with merkle tree
+
+src/
+├── components/
+│   ├── Navbar.tsx         - Navigation with experiments dropdown
+│   └── PrivacyDemo.tsx    - Interactive demo UI
+└── app/
+    ├── page.tsx           - Homepage with ecosystem tools
+    └── emblem/page.tsx    - Privacy protocol demo
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🔐 How It Works
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 1. Deposit Flow
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+User generates:
+  secret = random 256-bit number
+  nullifier = random 256-bit number
+  commitment = Poseidon(secret, nullifier)
 
-## Learn More
+Smart contract:
+  1. Store commitment in merkle tree
+  2. Transfer NFT to vault
+  3. Emit Deposit event (commitment only)
 
-To learn more about Next.js, take a look at the following resources:
+Result: NFT is now in shielded pool, linked to commitment
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### 2. Withdraw Flow
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```
+User generates zk-SNARK proof:
+  Private inputs: secret, nullifier, merkle path
+  Public inputs: merkle root, nullifierHash, recipient
 
-## Deploy on Vercel
+Proof proves:
+  - I know a secret+nullifier that hashes to a commitment
+  - That commitment exists in the merkle tree (via path)
+  - Without revealing which commitment it is
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Smart contract:
+  1. Verify zk-SNARK proof
+  2. Check nullifier hasn't been used (prevent double-spend)
+  3. Transfer NFT to recipient
+  4. Mark nullifier as spent
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Result: NFT withdrawn, no one knows which deposit it came from
+```
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+```bash
+# Node.js and npm
+node --version  # v18+
+npm --version   # v9+
+
+# For circuit compilation (later)
+npm install -g circom
+npm install -g snarkjs
+```
+
+### Installation
+
+```bash
+# Install dependencies
+npm install
+
+# Run development server
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) and navigate to Experiments → emblem
+
+## 🧪 Demo Features
+
+The current demo lets you:
+
+1. **Generate Commitment** - Create a commitment from secret+nullifier
+2. **Simulate Deposit** - See how NFT deposit would work
+3. **Generate Proof** - Simulate zk-SNARK proof generation
+4. **Simulate Withdrawal** - Test anonymous withdrawal flow
+
+All functions are currently simulated - next steps will integrate real crypto.
+
+## 🛣️ Roadmap
+
+### Phase 1: MVP (2-4 weeks) ✅ In Progress
+- [x] zk circuits (deposit.circom, withdraw.circom)
+- [x] Vault.sol smart contract skeleton
+- [x] Web UI demo
+- [ ] Integrate circomlib for Poseidon hashing
+- [ ] Compile circuits to generate proving keys
+- [ ] Deploy to testnet (Base Sepolia or BNB Testnet)
+- [ ] Real wallet integration (MetaMask)
+- [ ] Actual proof generation in browser
+
+### Phase 2: Production (4-8 weeks)
+- [ ] Optimized merkle tree (incremental updates)
+- [ ] Relayer service for anonymous withdrawals
+- [ ] Explorer showing commitments/nullifiers
+- [ ] Gas fee abstraction
+- [ ] Multi-chain support
+- [ ] Audit and security review
+
+### Phase 3: Ecosystem (8-12 weeks)
+- [ ] Private swaps
+- [ ] Shielded lending
+- [ ] Cross-chain bridges
+- [ ] Mobile app
+- [ ] Decentralized relayer network
+
+## 🔧 Technical Details
+
+### Circuits
+
+**deposit.circom**
+- Inputs: secret, nullifier (private)
+- Output: commitment = Poseidon(secret, nullifier)
+- Purpose: Generate commitment for deposit
+
+**withdraw.circom**
+- Private inputs: secret, nullifier, merkle path
+- Public inputs: root, nullifierHash, recipient
+- Purpose: Prove ownership without revealing which NFT
+- Merkle depth: 20 levels (1M max deposits)
+
+### Smart Contract
+
+**Vault.sol**
+- Stores commitments in merkle tree
+- Verifies zk-SNARK proofs on withdrawal
+- Prevents double-spending via nullifier tracking
+- Events: Deposit (commitment, leafIndex), Withdrawal (recipient, nullifierHash)
+
+### Security Features
+
+1. **Zero-Knowledge** - Proofs reveal nothing about secret/nullifier
+2. **Nullifier Prevention** - Each deposit can only be withdrawn once
+3. **Merkle Tree** - Efficient proof of membership
+4. **Non-custodial** - Users always control their secrets
+5. **Trustless** - Math guarantees, not reputation
+
+## 📚 Learn More
+
+### Key Concepts
+
+**Commitment**: Hash of secret+nullifier, posted publicly  
+**Nullifier**: Unique ID to prevent double-spending  
+**zk-SNARK**: Zero-Knowledge Succinct Non-Interactive Argument of Knowledge  
+**Merkle Tree**: Efficient way to prove a value is in a set  
+**Poseidon**: zk-friendly hash function  
+
+### Resources
+
+- [Tornado Cash Architecture](https://docs.tornado.cash/)
+- [Circom Documentation](https://docs.circom.io/)
+- [snarkjs Guide](https://github.com/iden3/snarkjs)
+- [zk-SNARKS Explained](https://z.cash/technology/zksnarks/)
+
+## 🤝 Contributing
+
+This is an experimental privacy protocol. Contributions welcome!
+
+## ⚠️ Disclaimer
+
+This is experimental software. Do not use with real assets until audited. The developers are not responsible for any loss of funds.
+
+## 📝 License
+
+MIT
